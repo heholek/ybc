@@ -1,24 +1,3 @@
-// CDN booster
-//
-// This is a dumb HTTP proxy, which caches files obtained from upstreamHost.
-//
-// Currently go-cdn-booster has the following limitations:
-//   * Supports only GET requests.
-//   * Doesn't respect HTTP headers received from both the client and
-//     the upstream host.
-//   * Optimized for small static files aka images, js and css with sizes
-//     not exceeding few Mb each.
-//   * It caches all files without expiration time.
-//     Actually this is a feature :)
-//
-// Thanks to YBC it has the following features:
-//   * Should be extremely fast.
-//   * Cached items survive CDN booster restart if backed by cacheFilesPath.
-//   * Cache size isn't limited by RAM size.
-//   * Optimized for SSDs and HDDs.
-//   * Performance shouldn't depend on the number of cached items.
-//   * It is deadly simple in configuration and maintenance.
-//
 package main
 
 import (
@@ -44,7 +23,7 @@ var (
 			"Enumerate multiple files delimited by comma for creating a cluster of caches.\n"+
 			"This can increase performance only if frequently accessed items don't fit RAM\n"+
 			"and each cache file is located on a distinct physical storage.")
-	cacheSize            = flag.Int("cacheSize", 100, "The total cache size in Mbytes")
+	cacheSize            = flag.Int("cacheSize", 10000, "The total cache size in Mbytes")
 	listenAddrs          = flag.String("listenAddrs", ":8080", "A list of TCP addresses to listen to HTTP requests. Leave empty if you don't need http")
 	maxIdleUpstreamConns = flag.Int("maxIdleUpstreamConns", 50, "The maximum idle connections to upstream host")
 	statsRequestPath     = flag.String("statsRequestPath", "/static_proxy_stats", "Path to page with statistics")
