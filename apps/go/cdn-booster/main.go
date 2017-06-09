@@ -142,7 +142,7 @@ func requestHandler(ctx *fasthttp.RequestCtx) {
 	
 	if string(ctx.RequestURI()) == "/proxy.pac" {
 		var w bytes.Buffer
-		fmt.Fprintf(&w, "function FindProxyForURL(url, host) {\n  if (shExpMatch(url, \"http://dl.google.com/chromeos/*\"))    return \"PROXY 192.168.1.2:8080\";  return \"DIRECT\";\n}")
+		fmt.Fprintf(&w, "function FindProxyForURL(url, host) {\n  if (shExpMatch(url, \"http://dl.google.com/chromeos/*\"))\n    return \"PROXY 192.168.1.2:8080\";\n  return \"DIRECT\";\n}")
 		ctx.Success("text/plain", w.Bytes())
 		return
 	}
