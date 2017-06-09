@@ -23,7 +23,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"flag"
 	"fmt"
 	"io"
@@ -84,7 +83,6 @@ func main() {
 
 func createCache() ybc.Cacher {
 	config := ybc.Config{
-		MaxItemsCount: ybc.SizeT(*maxItemsCount),
 		DataFileSize:  ybc.SizeT(*cacheSize) * ybc.SizeT(1024*1024),
 	}
 
@@ -104,7 +102,6 @@ func createCache() ybc.Cacher {
 			logFatal("Cannot open cache: [%s]", err)
 		}
 	} else if cacheFilesCount > 1 {
-		config.MaxItemsCount /= ybc.SizeT(cacheFilesCount)
 		config.DataFileSize /= ybc.SizeT(cacheFilesCount)
 		var configs ybc.ClusterConfig
 		configs = make([]*ybc.Config, cacheFilesCount)
