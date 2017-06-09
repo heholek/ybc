@@ -46,15 +46,11 @@ var (
 			"This can increase performance only if frequently accessed items don't fit RAM\n"+
 			"and each cache file is located on a distinct physical storage.")
 	cacheSize            = flag.Int("cacheSize", 100, "The total cache size in Mbytes")
-	httpsCertFile        = flag.String("httpsCertFile", "/etc/ssl/certs/ssl-cert-snakeoil.pem", "Path to HTTPS server certificate. Used only if listenHttpsAddr is set")
-	httpsKeyFile         = flag.String("httpsKeyFile", "/etc/ssl/private/ssl-cert-snakeoil.key", "Path to HTTPS server key. Used only if listenHttpsAddr is set")
-	httpsListenAddrs     = flag.String("httpsListenAddrs", "", "A list of TCP addresses to listen to HTTPS requests. Leave empty if you don't need https")
-	listenAddrs          = flag.String("listenAddrs", ":8098", "A list of TCP addresses to listen to HTTP requests. Leave empty if you don't need http")
+	listenAddrs          = flag.String("listenAddrs", ":8080", "A list of TCP addresses to listen to HTTP requests. Leave empty if you don't need http")
 	maxIdleUpstreamConns = flag.Int("maxIdleUpstreamConns", 50, "The maximum idle connections to upstream host")
-	maxItemsCount        = flag.Int("maxItemsCount", 100*1000, "The maximum number of items in the cache")
 	statsRequestPath     = flag.String("statsRequestPath", "/static_proxy_stats", "Path to page with statistics")
-	upstreamHost         = flag.String("upstreamHost", "www.google.com", "Upstream host to proxy data from. May include port in the form 'host:port'")
-	upstreamProtocol     = flag.String("upstreamProtocol", "http", "Use this protocol when talking to the upstream")
+	upstreamHost         = flag.String("upstreamHost", "dl.google.com", "Upstream host to proxy data from. May include port in the form 'host:port'")
+	upstreamProtocol     = flag.String("upstreamProtocol", "https", "Use this protocol when talking to the upstream")
 	useClientRequestHost = flag.Bool("useClientRequestHost", false, "If set to true, then use 'Host' header from client requests in requests to upstream host. Otherwise use upstreamHost as a 'Host' header in upstream requests")
 )
 
@@ -78,9 +74,6 @@ func main() {
 	}
 
 	var addr string
-	for _, addr = range strings.Split(*httpsListenAddrs, ",") {
-		go serveHttps(addr)
-	}
 	for _, addr = range strings.Split(*listenAddrs, ",") {
 		go serveHttp(addr)
 	}
@@ -103,8 +96,8 @@ func createCache() ybc.Cacher {
 	logMessage("Opening data files. This can take a while for the first time if files are big")
 	if cacheFilesCount < 2 {
 		if cacheFilesPath_[0] != "" {
-			config.DataFile = cacheFilesPath_[0] + ".cdn-booster.data"
-			config.IndexFile = cacheFilesPath_[0] + ".cdn-booster.index"
+			config.DataFile = cacheFilesPath_[0] + "cached-files.data"
+			config.IndexFile = cacheFilesPath_[0] + "cached-files.index"
 		}
 		cache, err = config.OpenCache(true)
 		if err != nil {
@@ -117,8 +110,8 @@ func createCache() ybc.Cacher {
 		configs = make([]*ybc.Config, cacheFilesCount)
 		for i := 0; i < cacheFilesCount; i++ {
 			cfg := config
-			cfg.DataFile = cacheFilesPath_[i] + ".cdn-booster.data"
-			cfg.IndexFile = cacheFilesPath_[i] + ".cdn-booster.index"
+			cfg.DataFile = cacheFilesPath_[i] + "cached-files.data"
+			cfg.IndexFile = cacheFilesPath_[i] + "cached-files.index"
 			configs[i] = &cfg
 		}
 		cache, err = configs.OpenCluster(true)
@@ -128,22 +121,6 @@ func createCache() ybc.Cacher {
 	}
 	logMessage("Data files have been opened")
 	return cache
-}
-
-func serveHttps(addr string) {
-	if addr == "" {
-		return
-	}
-	cert, err := tls.LoadX509KeyPair(*httpsCertFile, *httpsKeyFile)
-	if err != nil {
-		logFatal("Cannot load certificate: [%s]", err)
-	}
-	c := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}
-	ln := tls.NewListener(listen(addr), c)
-	logMessage("Listening https on [%s]", addr)
-	serve(ln)
 }
 
 func serveHttp(addr string) {
